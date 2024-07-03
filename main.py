@@ -1,4 +1,5 @@
 import re
+from numpy import info
 from transformers import MarianMTModel, MarianTokenizer
 from tqdm import tqdm
 
@@ -33,6 +34,9 @@ def translate_ass_file(input_file, output_file, model, tokenizer):
     
     total_lines = len(content)
     translated_content = []
+
+    info_text = "Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,Přeloženo pomocí NotTranslate AI ver. 0.1-Alpha\\NStránky developera: NotMarra.com\n"
+    translated_content.append(info_text)
     
     print(f"Překládám {total_lines} řádků...")
     for line in tqdm(content, total=total_lines, desc="Průběh překladu"):
