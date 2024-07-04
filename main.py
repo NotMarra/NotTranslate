@@ -36,10 +36,18 @@ def translate_ass_file(input_file, output_file, model, tokenizer):
     translated_content = []
 
     info_text = "Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,Přeloženo pomocí NotTranslate AI ver. 0.1-Alpha\\NStránky developera: NotMarra.com\n"
-    translated_content.append(info_text)
-    
+    events_section_found = False
+    first_dialogue_found = False
+
     print(f"Překládám {total_lines} řádků...")
     for line in tqdm(content, total=total_lines, desc="Průběh překladu"):
+        if line.strip().startswith('[Events]'):
+            events_section_found = True
+
+        if events_section_found and line.startswith('Dialogue:')and not first_dialogue_found:
+            translated_content.append(info_text)
+            first_dialogue_found = True
+            
         translated_line = translate_line(line)
         translated_content.append(translated_line)
     
