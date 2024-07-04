@@ -3,3 +3,8 @@ torch
 tqdm
 sentencepiece
 sacremoses
+numpy
+flask
+redis
+celery
+functools

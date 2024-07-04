@@ -51,11 +51,6 @@ def translate_ass_file(input_file, output_file, model, tokenizer, max_words_per_
             translated_content.append(info_text)
             first_dialogue_found = True
     
-    print(f"Překládám {total_lines} řádků...")
-    for line in tqdm(content, total=total_lines, desc="Průběh překladu"):
-        translated_line = translate_line(line)
-        translated_content.append(translated_line)
-    
     with open(output_file, 'w', encoding='utf-8') as f:
         f.writelines(translated_content)
     
