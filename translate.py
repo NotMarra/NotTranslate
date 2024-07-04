@@ -1,5 +1,4 @@
 import re
-from numpy import info
 from transformers import MarianMTModel, MarianTokenizer
 from tqdm import tqdm
 
@@ -7,11 +6,7 @@ def translate_text(text, model, tokenizer):
     translated = model.generate(**tokenizer(text, return_tensors="pt", padding=True))
     return tokenizer.decode(translated[0], skip_special_tokens=True)
 
-def split_text(text, max_words):
-    words = text.split()
-    return [' '.join(words[i:i+max_words]) for i in range(0, len(words), max_words)]
-
-def translate_ass_file(input_file, output_file, model, tokenizer, max_words_per_line=10):
+def translate_ass_file(input_file, output_file, model, tokenizer):
     with open(input_file, 'r', encoding='utf-8') as f:
         content = f.readlines()
     
@@ -25,20 +20,21 @@ def translate_ass_file(input_file, output_file, model, tokenizer, max_words_per_
         prefix = match.group(1)
         text = match.group(2)
         
-        joined_text = text.replace('\\N', ' ').strip()
+        parts = text.split('\\N')
+        translated_parts = []
+        for part in parts:
+            part = part.strip()
+            if part:
+                translated_part = translate_text(part, model, tokenizer)
+                translated_parts.append(translated_part)
         
-        translated_text = translate_text(joined_text, model, tokenizer)
-        
-        split_parts = split_text(translated_text, max_words_per_line)
-        
-        final_text = '\\N'.join(split_parts)
-        
-        return f"{prefix}{final_text}\n"
+        translated_text = '\\N'.join(translated_parts)
+        return f"{prefix}{translated_text}\n"
     
     total_lines = len(content)
     translated_content = []
 
-    info_text = "Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,Přeloženo pomocí NotTranslate AI ver. 0.1-Alpha\\NKorekce: bez korekce\\NStránky developera: NotMarra.com\n"
+    info_text = "Dialogue: 0,0:00:00.00,0:00:05.00,Default,,0,0,0,,Přeloženo pomocí NotTranslate AI ver. 0.1-Alpha\\NStránky developera: NotMarra.com\n"
     events_section_found = False
     first_dialogue_found = False
 
@@ -50,6 +46,9 @@ def translate_ass_file(input_file, output_file, model, tokenizer, max_words_per_
         if events_section_found and line.startswith('Dialogue:')and not first_dialogue_found:
             translated_content.append(info_text)
             first_dialogue_found = True
+            
+        translated_line = translate_line(line)
+        translated_content.append(translated_line)
     
     with open(output_file, 'w', encoding='utf-8') as f:
         f.writelines(translated_content)
