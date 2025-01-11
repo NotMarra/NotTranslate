@@ -22,7 +22,8 @@
 	let loading: boolean = false;
 	let downloadUrl: string | null = null;
 	let progress = 0;
-
+	let file_content: [string, string][] = [];
+	file_content = [];
 	async function pollTranslationStatus(fileId: string): Promise<void> {
 		while (true) {
 			try {
@@ -37,6 +38,17 @@
 
 				if (status.status === 'completed') {
 					console.log('Překlad dokončen');
+					loading = false;
+
+					const response = await fetch(`${API_URL}/get-file-content/${fileId}`);
+					const data = await response.json();
+					//separate content and original_content from data and assign to file_content into array of arrays
+					if (Array.isArray(data)) {
+						file_content = data.map((d: any) => [d.original_content, d.content]);
+					} else {
+						throw new Error('Neplatný formát dat z serveru');
+					}
+
 					break;
 				}
 
@@ -79,11 +91,11 @@
 			// Začneme sledovat stav překladu
 			pollTranslationStatus(data.file_id);
 
-			if (!Array.isArray(data.translations)) {
+			if (!Array.isArray(file_content)) {
 				throw new Error('Neplatný formát dat z serveru');
 			}
 
-			translations = data.translations.map((t: [string, string]) => ({
+			translations = file_content.map((t: [string, string]) => ({
 				original: t[0],
 				translated: t[1]
 			}));
@@ -100,8 +112,6 @@
 			} else {
 				console.error('Neočekávaná chyba při překladu:', error);
 			}
-		} finally {
-			loading = false;
 		}
 	}
 
