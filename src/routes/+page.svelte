@@ -19,6 +19,7 @@
 	let rating: number = 0;
 	let loading: boolean = false;
 	let progress = 0;
+	let currentFileId: string | null = null; // Přidáno pro uchování file_id
 
 	async function pollTranslationStatus(fileId: string): Promise<void> {
 		while (true) {
@@ -71,6 +72,7 @@
 			}
 
 			const { file_id } = await uploadResponse.json();
+			currentFileId = file_id; // Uložíme file_id pro pozdější použití
 
 			// Poll for translation status
 			await pollTranslationStatus(file_id);
@@ -91,6 +93,11 @@
 	}
 
 	async function submitFeedback(subtitlePair: SubtitlePair): Promise<void> {
+		if (!currentFileId) {
+			alert('Chyba: Chybí ID souboru');
+			return;
+		}
+
 		if (rating === 0) {
 			alert('Prosím vyberte hodnocení (1-5 hvězdiček)');
 			return;
@@ -99,16 +106,15 @@
 		const formData = new FormData();
 		formData.append('original_text', subtitlePair.original.text);
 		formData.append('translated_text', subtitlePair.translated.text);
-		formData.append('corrected_text', correctedText || ''); // Zajistíme, že není null
+		formData.append('corrected_text', correctedText || '');
 		formData.append('rating', rating.toString());
-		formData.append('file_id', subtitlePair.id.toString()); // Přidáme file_id
+		formData.append('file_id', currentFileId); // Použijeme uložené file_id
 
 		try {
 			const response = await fetch(`${API_URL}/feedback`, {
 				method: 'POST',
 				body: formData,
-				// Přidáme správné headers
-				credentials: 'include' // Povolí cookies pokud je používáte
+				credentials: 'include'
 			});
 
 			if (!response.ok) {
