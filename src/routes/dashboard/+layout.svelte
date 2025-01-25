@@ -40,6 +40,8 @@
               </DropdownMenu.Content>
           </DropdownMenu.Root>
     </header>
+    <div class="bg-zinc-900 text-white">
       {@render children()}
+    </div>
     </div>
 </div>
